@@ -1,0 +1,47 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import MinMaxScaler
+from sklearn.metrics import mean_squared_error, r2_score
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense
+
+
+df = pd.read_csv("D:/BE Lab Practicals/Sem 8/DL/Lab 1/1_boston_housing.csv")
+X = df.loc[:, df.columns != 'MEDV']
+y = df.loc[:, df.columns == 'MEDV']
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=123)
+df
+
+mms = MinMaxScaler()
+mms.fit(X_train)
+X_train = mms.transform(X_train)
+X_test = mms.transform(X_test)
+
+model = Sequential()
+model.add(Dense(128, input_shape=(13, ), activation='relu', name='dense_1'))
+model.add(Dense(64, activation='relu', name='dense_2'))
+model.add(Dense(1, activation='linear', name='dense_output'))
+model.compile(optimizer='adam', loss='mse', metrics=['mae'])
+model.summary()
+
+history = model.fit(X_train, y_train, epochs=100, validation_split=0.05, verbose = 1)
+
+
+pd.DataFrame(history.history).plot(figsize=(10,7))
+plt.title("Metrics graph")
+plt.show()
+
+mse_nn, mae_nn = model.evaluate(X_test, y_test)
+print('Mean squared error on test data: ', mse_nn)
+print('Mean absolute error on test data: ', mae_nn)
+rmse_nn = np.sqrt(mse_nn)
+print('Root Mean Squared Error on test data: ', rmse_nn)
+r2_nn = r2_score(y_test, model.predict(X_test))
+print('R-squared on test data: ', r2_nn)
+
+sns.regplot(x=y_test, y=model.predict(X_test))
+plt.title("Regression Line for Predicted values")
+plt.show()
